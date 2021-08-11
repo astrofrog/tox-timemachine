@@ -25,8 +25,8 @@ HELP = ("Specify a date to use for filtering releases on PyPI. Only packages "
 
 @hookimpl
 def tox_addoption(parser):
-    parser.add_argument('--pypi-cutoff-date', dest='pypi_cutoff_date', help=HELP)
-    parser.add_testenv_attribute('pypi_cutoff_date', 'string', help=HELP)
+    parser.add_argument('--time-travel', dest='time_travel', help=HELP)
+    parser.add_testenv_attribute('time_travel', 'string', help=HELP)
 
 
 SERVER_PROCESS = {}
@@ -34,15 +34,16 @@ SERVER_PROCESS = {}
 
 @hookimpl
 def tox_testenv_create(venv, action):
+
     # Skip the environment used for creating the tarball
     if venv.name == ".package":
         return
 
     global SERVER_PROCESS
 
-    pypi_cutoff_date = venv.envconfig.config.option.pypi_cutoff_date or venv.envconfig.pypi_cutoff_date
+    time_travel = venv.envconfig.config.option.time_travel or venv.envconfig.time_travel
 
-    if not pypi_cutoff_date:
+    if not time_travel:
         return
 
     # Find available port
@@ -52,10 +53,10 @@ def tox_testenv_create(venv, action):
     sock.close()
 
     # Run pypicky
-    print(f"{venv.name}: Starting pypi-timemachine server with date {pypi_cutoff_date}")
+    print(f"{venv.name}: Starting pypi-timemachine server with date {time_travel}")
 
     SERVER_PROCESS[venv.name] = subprocess.Popen([sys.executable, '-m', 'pypi_timemachine',
-                                                  pypi_cutoff_date, '--port', str(port), '--quiet'])
+                                                  time_travel, '--port', str(port), '--quiet'])
 
     # FIXME: properly check that the server has started up
     time.sleep(2)
